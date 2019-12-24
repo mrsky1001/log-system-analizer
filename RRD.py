@@ -1,3 +1,5 @@
+import os
+
 import rrdtool
 import tempfile
 import re, xmljson
@@ -135,7 +137,11 @@ class RRD:
 
     def csv_export(self):
         res_xport = self.xport()
-        path_csv = "csv/" + self.name_host + "." + self.file_name + ".csv"
+        directory = "csv_rrd/"
+        path_csv = directory + self.name_host + "." + self.file_name + ".csv"
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
         with open(path_csv, 'w') as the_file:
             list_columns = res_xport['meta']['legend']
@@ -145,8 +151,8 @@ class RRD:
             end = res_xport['meta']['end']
 
             i = 0
-            the_file.write("time,")
             the_file.write("timestamp,")
+            the_file.write("time,")
             for column in list_columns:
                 i += 1
                 line = re.sub("\"", "", column)
@@ -161,8 +167,8 @@ class RRD:
             for row in data:
                 i = 0
                 timestamp += step
-                line += str(timestamp) + ", "
-                line = self.parse_timestamp(timestamp) + ", "
+                line = str(timestamp) + ", "
+                line += self.parse_timestamp(timestamp) + ", "
                 the_file.write(line)
                 for column in row:
                     i += 1

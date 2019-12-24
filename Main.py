@@ -13,7 +13,7 @@ from RRDFactory import RRDFactory
 #           width=1024
 #           )
 
-rrd_factory = RRDFactory(folder="/home/nk16/rrd/",
+rrd_factory = RRDFactory(folder="rrd/",
                          start_point="1419000000",
                          end_point="now",
                          type_command="AVERAGE",

@@ -1,15 +1,13 @@
 import csv
 import subprocess
-
+import openpyxl
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import rrdtool
-import tempfile
 import re, xmljson
 import os
 from tabulate import tabulate
-from pandas.io import json
 
 from RRD import RRD
 
@@ -39,14 +37,19 @@ class RRDFactory:
     def parse_all_rrd(self):
         print("\n---- RRD FACTORY. Load params from rrd-files ----")
         print("start parse ngraph ...")
+        directory = "csv/"
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         p1 = subprocess.Popen(["perl", "parsengraph.pl"], stdout=subprocess.PIPE)
         p1.stdout.close()
         p1.terminate()
-        print("complete parse.")
+        print("Complete parse.")
 
         descriptions = []
 
-        with open("csv/table_description_params_rrd.csv", "r", newline="") as file:
+        with open(directory + "table_description_params_rrd.csv", "r", newline="") as file:
             reader = csv.reader(file)
             for row in reader:
                 descriptions.append(row)
@@ -85,7 +88,7 @@ class RRDFactory:
                             self.list_all_params.append(str(rrd.name_host) + "." + str(ds))
                     except Exception as e:
                         print(e)
-        print("complete load.")
+        print("Complete load.")
 
         return self.list_all_params
 
@@ -94,6 +97,7 @@ class RRDFactory:
         self.list_menu.append(MenuItem("Display list rrd-files", self.display_list_rrd_files))
         self.list_menu.append(MenuItem("Load RRD-file", str("")))
         self.list_menu.append(MenuItem("Parase to csv all rrd-files", self.csv_all_rrd))
+        self.list_menu.append(MenuItem("Correlation selected rrd", self.correlation_matrix))
 
         i = 0
         for item in self.list_menu:
@@ -133,119 +137,104 @@ class RRDFactory:
         list_headers = ["name", "description", "file"]
         list_rows = []
 
-        for rrd in self.list_rrd:
-            list_rows.append([rrd.name_host, rrd.description, re.findall("[^/]*\w+$", rrd.folder)[0] + rrd.file_name])
+        for rrd in sorted(self.list_rrd, key=lambda rrd: rrd.name_host):
+            list_rows.append(
+                [rrd.name_host, rrd.description, re.findall("[^/]*\w+$", rrd.folder)[0] + '/' + rrd.file_name])
 
         table = tabulate(list_rows, headers=list_headers, tablefmt='orgtbl')
         print(table)
 
     def csv_all_rrd(self):
         print("\n---- RRD FACTORY. Generate CSV from all rrd ----")
-        path_csv = "csv/params_from_all_rrd.csv"
-        self.csv_concat()
-        # with open(path_csv, 'w') as the_file:
-        #     list_headers = []
-        #     list_rows = []
-        #
-        # for rrd in self.list_rrd:
-        #     print(rrd.csv_export())
-            #
-            #     list_columns = res_xport['meta']['legend']
-            #     list_headers += list_columns
-            #     data = res_xport['data']
-            #     list_rows += (data)
-            #     i = 0
-            #     for column in list_columns:
-            #         i += 1
-            #         line = re.sub("\"", "", column)
-            #         if i < len(list_columns):
-            #             line += ","
-            #
-            #         the_file.write(line)
-            #     the_file.write(", ")
-            # the_file.write("\n")
-            # print(list_headers)
-            # print(list_rows)
-            # print("-------------------------")
-            # i = 0
-            #
-            # for row in list_rows:
-            #     for row2 in list_rows:
-            #         index = i
-            #         line = ""
-            #
-            #         if len(row2) < i:
-            #             index = i % len(row2)
-            #         line = str((0 if row2[index] is None else row2[index]))
-            #         line += ","
-            #         the_file.write(line)
-            #     i += 1
-            #     the_file.write("\n")
-            #     if i == 3: break
 
-            #
+        for rrd in self.list_rrd:
+            print(rrd.csv_export())
 
-            #
-            # for rrd in self.list_rrd:
-            #     res_xport = rrd.xport()
-            #
-            #     list_columns = res_xport['meta']['legend']
-            #     data = res_xport['data']
-            #
-            #     for head in list_columns:
-            #
-            #
-            #     for row in data:
-            #         i = 0
-            #             i += 1
-            #
-            #             line = str((0 if column is None else column))
-            #             if i < len(list_columns):
-            #                 line += ","
-            #             the_file.write(line)
-            #     the_file.write("\n")
-    def csv_concat(self):
-        # the file names
-        f1 = "csv/ap-11.2ff9e22d6acd301b0278263734ad875c.rrd.csv"
-        f2 = "csv/asa-1.41d842d4b40b01b40903f21f77cda881.rrd.csv"
-        out_f = "out.csv"
+    def csv_concat(self, rrd1, rrd2):
+        print("\n---- RRD FACTORY. Generate CSV concatenation rrd ----")
 
-        # read the files
+        f1 = rrd1.csv_export()
+        f2 = rrd2.csv_export()
+
         df1 = pd.read_csv(f1)
         df2 = pd.read_csv(f2)
 
-        # get the keys
         keys1 = list(df1)
         keys2 = list(df2)
 
-        # merge both files
         for idx, row in df2.iterrows():
             data = df1[df1['timestamp'] == row['timestamp']]
-            print(data)
-            # if row with such id does not exist, add the whole row
+
             if data.empty:
+                print("Warning! Data merge on time stamp is empty.")
                 next_idx = len(df1)
                 for key in keys2:
                     df1.at[next_idx, key] = df2.at[idx, key]
 
-            # if row with such id exists, add only the missing keys with their values
             else:
                 i = int(data.index[0])
                 for key in keys2:
-                    print(key)
-                    # if key not in keys1:
-                        # df1.at[i, key] = df2.at[idx, key]
-        # print(df1)
-        # save the merged files
-        # df1.to_csv(out_f, index=False, encoding='utf-8', quotechar="", quoting=csv.QUOTE_NONE)
+                    if key not in keys1:
+                        df1.at[i, key] = df2.at[idx, key]
 
-    def correlation_all_matrix(self):
-        data = pd.read_csv(self.rrd.csv_export())
+        directory = "csv_merge/"
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        df1.to_csv(directory + "merge_" + rrd1.name_host + "_" + rrd2.name_host + ".csv", index=False, encoding='utf-8',
+                   quotechar="", quoting=csv.QUOTE_NONE)
+        return df1
+
+    def correlation_matrix(self):
+        print("\n---- RRD FACTORY. Correlation  ----")
+
+        self.display_list_rrd_files()
+
+        name_rrd1 = input("Input name rrd 1: ")
+        name_rrd2 = input("Input name rrd 2: ")
+
+        rrd1 = ""
+        rrd2 = ""
+
+        for rrd in self.list_rrd:
+            if rrd.name_host == name_rrd1:
+                rrd1 = rrd
+            if rrd.name_host == name_rrd2:
+                rrd2 = rrd
+
+        if type(rrd1) is not RRD or type(rrd2) is not RRD:
+            print("Incorrect input!")
+            return
+
+        data = self.csv_concat(rrd1, rrd2)
+        print(data.to_string)
+        print("Start correlation ...")
         corrmat = data.corr()
 
-        f, ax = plt.subplots(figsize=(12, 8))
-        sns.heatmap(corrmat, mask=sns.np.zeros_like(corrmat, dtype=sns.np.bool),
-                    cmap=sns.diverging_palette(220, 10, as_cmap=True), square=True, ax=ax)
-        plt.savefig('graphs/correlation_matrix.png')
-        plt.show()
+        directory = "correlation_table/"
 
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        try:
+            path_save = directory + "correlation_" + rrd1.name_host + "_" + rrd2.name_host
+            corrmat.to_excel(path_save + ".xlsx")
+        except Exception as e:
+            print(e)
+        # with open(path_save + ".txt", 'w') as the_file:
+        #     the_file.write(corrmat.to)
+
+        print(corrmat)
+
+        f, ax = plt.subplots(figsize=(12, 8))
+        sns.heatmap(corrmat, cmap=sns.diverging_palette(220, 10, as_cmap=True), square=True, ax=ax)
+
+        directory = "graphs/"
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        plt.savefig(directory + 'correlation_matrix.png')
+        plt.show()
+        print("Complete correlation.")
