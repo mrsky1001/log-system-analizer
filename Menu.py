@@ -1,5 +1,5 @@
 class Menu:
-    def __init__(self, description, rrd):
+    def __init__(self, description, list_rrd):
         self.description = description
         self.rrd = rrd
 

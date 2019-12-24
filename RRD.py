@@ -8,26 +8,32 @@ list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "e
 
 
 class RRD:
-    def __init__(self, folder, file_name, start_point, end_point, type_command, height, width):
+    def __init__(self, name_host, description, folder, file_name, start_point, end_point, type_command, height, width):
+        self.name_host = name_host,
+        self.description = description,
         self.folder = folder
-        self.file_name = file_name
+        self.file_name = "/" + file_name
         self.file = self.folder + self.file_name
         self.start_point = start_point
         self.end_point = end_point
         self.type_command = type_command
         self.height = height
         self.width = width
-        self.list_ds = self.parse_ds()
+        self.list_ds = self.parse_ds
 
+    @property
     def parse_ds(self):
-        info = rrdtool.info(self.file)
         list_ds = []
 
-        for ds in re.findall(r'ds\[\w+]\.index', r"" + json.dumps(info)):
-            res = re.sub(r'\w+\[', '', ds)
-            res = re.sub(r'].index', '', res)
-            list_ds.append(res)
-
+        try:
+            info = rrdtool.info(self.file)
+            for ds in re.findall(r'ds\[\w+]\.index', r"" + json.dumps(info)):
+                res = re.sub(r'\w+\[', '', ds)
+                res = re.sub(r'].index', '', res)
+                list_ds.append(res)
+        except Exception as e:
+            print("Error:")
+            print(e)
         return list_ds
 
     def display_attr(self):
