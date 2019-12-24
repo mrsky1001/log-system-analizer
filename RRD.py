@@ -145,7 +145,8 @@ class RRD:
             end = res_xport['meta']['end']
 
             i = 0
-            the_file.write("time, timestamp, ")
+            the_file.write("time,")
+            the_file.write("timestamp,")
             for column in list_columns:
                 i += 1
                 line = re.sub("\"", "", column)
@@ -160,8 +161,8 @@ class RRD:
             for row in data:
                 i = 0
                 timestamp += step
-                line = self.parse_timestamp(timestamp) + ", "
                 line += str(timestamp) + ", "
+                line = self.parse_timestamp(timestamp) + ", "
                 the_file.write(line)
                 for column in row:
                     i += 1
