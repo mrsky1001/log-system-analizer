@@ -162,9 +162,11 @@ class RRDFactory:
         keys1 = list(df1)
         keys2 = list(df2)
 
+        print(keys1)
+        print(keys2)
+
         for idx, row in df2.iterrows():
             data = df1[df1['timestamp'] == row['timestamp']]
-
             if data.empty:
                 print("Warning! Data merge on time stamp is empty.")
                 next_idx = len(df1)
@@ -228,13 +230,20 @@ class RRDFactory:
         print(corrmat)
 
         f, ax = plt.subplots(figsize=(12, 8))
-        sns.heatmap(corrmat, cmap=sns.diverging_palette(220, 10, as_cmap=True), square=True, ax=ax)
+        sns.heatmap(corrmat, cmap="YlGnBu", square=True, annot=True, ax=ax)
 
         directory = "graphs/"
 
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        plt.savefig(directory + 'correlation_matrix.png')
+        plt.savefig(directory + 'correlation_matrix' + path_save + '.png')
+        plt.clf()
+        plt.close()
+
+        plt.subplots(figsize=(12, 8))
+        sns.pairplot(data)
+        plt.savefig(directory + 'correlation_hists' + path_save + '.png')
+
         plt.show()
         print("Complete correlation.")
