@@ -12,13 +12,13 @@ class RRD:
         self.name_host = name_host
         self.description = description
         self.folder = folder
-        self.file_name = "/" + file_name
-        self.file = self.folder + self.file_name
+        self.file_name = file_name
+        self.file = self.folder + '/' + self.file_name
         self.start_point = start_point
         self.end_point = end_point
-        self.first = rrdtool.first(self.folder + self.file_name)
-        self.last = rrdtool.last(self.folder + self.file_name)
-        self.lastupdate = rrdtool.lastupdate(self.folder + self.file_name)
+        self.first = rrdtool.first(self.file)
+        self.last = rrdtool.last(self.file)
+        self.lastupdate = rrdtool.lastupdate(self.file)
         self.type_command = type_command
         self.height = height
         self.width = width
@@ -135,7 +135,7 @@ class RRD:
 
     def csv_export(self):
         res_xport = self.xport()
-        path_csv = "csv" + self.file_name + ".csv"
+        path_csv = "csv/" + self.name_host + "." + self.file_name + ".csv"
 
         with open(path_csv, 'w') as the_file:
             list_columns = res_xport['meta']['legend']

@@ -141,8 +141,8 @@ class RRDFactory:
             list_headers = []
             list_rows = []
 
-            # for rrd in self.list_rrd:
-            print(self.list_rrd[0].csv_export())
+            for rrd in self.list_rrd:
+                print(rrd.csv_export())
             #
             #     list_columns = res_xport['meta']['legend']
             #     list_headers += list_columns
