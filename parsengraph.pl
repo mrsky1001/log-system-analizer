@@ -5975,19 +5975,21 @@ pr("</tr>");
 pr("</thead>");
 pr("<tbody>");
 
+$VAR1_r = %$VAR1{'host'};
 
-foreach  $host_key (sort {lc $a cmp lc $b} keys %$VAR1{'host'})
+foreach  $host_key (sort {lc $a cmp lc $b} keys %$VAR1_r)
 {
     $hosts = $$VAR1{'host'}{$host_key};
-    $count_services = (keys %$hosts{'service'}) + 1;
+    $count_services = (keys %{$hosts{'service'}}) + 1;
 
-   
+
     if($count_services == 2){
         pr("<tr>");
         pr("<td> $host_key </td>");
         pr_csv("$host_key");
 
-        foreach $service_key (sort {lc $a cmp lc $b} keys %$hosts{'service'})
+        $hosts_r = %$hosts{'service'};
+        foreach $service_key (sort {lc $a cmp lc $b} keys %$hosts_r)
         {
            $services = $$hosts{'service'}{$service_key}{'rrd_file'};
            pr_csv(", $service_key, $services");
@@ -6000,7 +6002,9 @@ foreach  $host_key (sort {lc $a cmp lc $b} keys %$VAR1{'host'})
         pr("<tr>");
         pr("<td rowspan='$count_services'> $host_key </td>");
         pr("</tr>");
-        foreach $service_key (sort {lc $a cmp lc $b} keys %$hosts{'service'})
+
+        $hosts_r = %$hosts{'service'};
+        foreach $service_key (sort {lc $a cmp lc $b} keys %$hosts_r)
         {
            $services = $$hosts{'service'}{$service_key}{'rrd_file'};
            pr_csv("$host_key, $service_key, $services \n");

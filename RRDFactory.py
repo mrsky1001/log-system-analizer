@@ -38,10 +38,11 @@ class RRDFactory:
 
     def parse_all_rrd(self):
         print("\n---- RRD FACTORY. Load params from rrd-files ----")
+        print("start parse ngraph ...")
         p1 = subprocess.Popen(["perl", "parsengraph.pl"], stdout=subprocess.PIPE)
-        print(p1.communicate())
         p1.stdout.close()
         p1.terminate()
+        print("complete parse.")
 
         descriptions = []
 
@@ -50,6 +51,7 @@ class RRDFactory:
             for row in reader:
                 descriptions.append(row)
 
+        print("start load rrds...")
         for root, dirs, files in os.walk(self.folder):
             for filename in files:
                 if filename.endswith(".rrd"):
@@ -83,6 +85,7 @@ class RRDFactory:
                             self.list_all_params.append(str(rrd.name_host) + "." + str(ds))
                     except Exception as e:
                         print(e)
+        print("complete load.")
 
         return self.list_all_params
 
