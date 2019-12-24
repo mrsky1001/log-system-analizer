@@ -15,7 +15,7 @@ from RRDFactory import RRDFactory
 
 rrd_factory = RRDFactory(folder="/home/nk16/rrd/",
                          start_point="1419000000",
-                         end_point="1420800000",
+                         end_point="now",
                          type_command="AVERAGE",
                          height=800,
                          width=1024)

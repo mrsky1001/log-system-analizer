@@ -1,7 +1,7 @@
 import rrdtool
 import tempfile
 import re, xmljson
-
+from datetime import datetime
 from pandas.io import json
 
 list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "exit"]
@@ -9,13 +9,16 @@ list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "e
 
 class RRD:
     def __init__(self, name_host, description, folder, file_name, start_point, end_point, type_command, height, width):
-        self.name_host = name_host,
-        self.description = description,
+        self.name_host = name_host
+        self.description = description
         self.folder = folder
         self.file_name = "/" + file_name
         self.file = self.folder + self.file_name
         self.start_point = start_point
         self.end_point = end_point
+        self.first = rrdtool.first(self.folder + self.file_name)
+        self.last = rrdtool.last(self.folder + self.file_name)
+        self.lastupdate = rrdtool.lastupdate(self.folder + self.file_name)
         self.type_command = type_command
         self.height = height
         self.width = width
@@ -127,15 +130,22 @@ class RRD:
         res_xport = rrdtool.xport(rrd_args)
         return res_xport
 
+    def parse_timestamp(self, timestamp):
+        return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
     def csv_export(self):
         res_xport = self.xport()
-        path_csv = "csv/" + self.file_name + ".csv"
+        path_csv = "csv" + self.file_name + ".csv"
 
         with open(path_csv, 'w') as the_file:
             list_columns = res_xport['meta']['legend']
             data = res_xport['data']
+            start = res_xport['meta']['start']
+            step = res_xport['meta']['step']
+            end = res_xport['meta']['end']
 
             i = 0
+            the_file.write("time, timestamp, ")
             for column in list_columns:
                 i += 1
                 line = re.sub("\"", "", column)
@@ -146,8 +156,13 @@ class RRD:
 
             the_file.write("\n")
 
+            timestamp = start - step
             for row in data:
                 i = 0
+                timestamp += step
+                line = self.parse_timestamp(timestamp) + ", "
+                line += str(timestamp) + ", "
+                the_file.write(line)
                 for column in row:
                     i += 1
 

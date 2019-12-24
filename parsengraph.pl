@@ -5990,27 +5990,25 @@ foreach  $host_key (sort {lc $a cmp lc $b} keys %$VAR1{'host'})
         foreach $service_key (sort {lc $a cmp lc $b} keys %$hosts{'service'})
         {
            $services = $$hosts{'service'}{$service_key}{'rrd_file'};
-           pr_csv(", $service_key");
-           pr_csv(", $services");
+           pr_csv(", $service_key, $services");
            pr("<td> $service_key </td>");
            pr("<td> $services</td>");
         }
-        pr_csv("\n ");
+        pr_csv("\n");
         pr("</tr>");
     }else{
         pr("<tr>");
         pr("<td rowspan='$count_services'> $host_key </td>");
         pr("</tr>");
-
         foreach $service_key (sort {lc $a cmp lc $b} keys %$hosts{'service'})
         {
            $services = $$hosts{'service'}{$service_key}{'rrd_file'};
+           pr_csv("$host_key, $service_key, $services \n");
 
            pr("<tr>");
            pr("<td> $service_key </td>");
            pr("<td> $services</td>");
            pr("</tr>");
-            
         }
     }
 }
