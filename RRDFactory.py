@@ -42,9 +42,7 @@ class RRDFactory:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        p1 = subprocess.Popen(["perl", "parsengraph.pl"], stdout=subprocess.PIPE)
-        p1.stdout.close()
-        p1.terminate()
+        subprocess.Popen(["perl", "parsengraph.pl"], stdout=subprocess.PIPE)
         print("Complete parse.")
 
         descriptions = []
@@ -142,6 +140,8 @@ class RRDFactory:
                 [rrd.name_host, rrd.description, re.findall("[^/]*\w+$", rrd.folder)[0] + '/' + rrd.file_name])
 
         table = tabulate(list_rows, headers=list_headers, tablefmt='orgtbl')
+        with open("csv/table_description_params_rrd.txt", 'w') as the_file:
+            the_file.write(table)
         print(table)
 
     def csv_all_rrd(self):
@@ -237,13 +237,14 @@ class RRDFactory:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        plt.savefig(directory + 'correlation_matrix' + path_save + '.png')
+        plt.savefig(directory + 'correlation_matrix_' + rrd1.name_host + "_" + rrd2.name_host + '.png')
+        plt.show()
         plt.clf()
         plt.close()
 
         plt.subplots(figsize=(12, 8))
         sns.pairplot(data)
-        plt.savefig(directory + 'correlation_hists' + path_save + '.png')
+        plt.savefig(directory + 'correlation_hists_' + rrd1.name_host + "_" + rrd2.name_host + '.png')
 
         plt.show()
         print("Complete correlation.")
