@@ -6,6 +6,8 @@ import re, xmljson
 from datetime import datetime
 from pandas.io import json
 
+import RRDFactory
+
 list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "exit"]
 
 
@@ -25,6 +27,8 @@ class RRD:
         self.height = height
         self.width = width
         self.list_ds = self.parse_ds
+        self.list_menu = []
+        self.set_menu()
 
     @property
     def parse_ds(self):
@@ -41,14 +45,45 @@ class RRD:
             print(e)
         return list_ds
 
-    def display_attr(self):
-        print("\n---- RRD params ----")
+    def display_menu(self):
+        print("\n---- RRD. Menu ----")
+
+        for item in self.list_menu:
+            print(str(item.id) + str(". " + item.name))
+
+        ans = input("Selection: ")
+
+        if ans == str(len(self.list_menu)):
+            return
+
+        try:
+            for item in self.list_menu:
+                if item.id == ans:
+                    item.function()
+                    break
+        except Exception as e:
+            print("Error: ")
+            print(e)
+
+        self.display_menu()
+
+    def set_menu(self):
+        self.list_menu.append(RRDFactory.MenuItem("Display params", self.display_params))
+        self.list_menu.append(RRDFactory.MenuItem("Show graph", self.all_on_one_graph))
+        self.list_menu.append(RRDFactory.MenuItem("Show all graph", self.all_graph))
+        self.list_menu.append(RRDFactory.MenuItem("Parse to csv rrd-file", self.csv_export))
+        self.list_menu.append(RRDFactory.MenuItem("Exit", ""))
+
+        RRDFactory.set_id(self.list_menu)
+
+    def display_params(self):
+        print("\n---- RRD. params ----")
 
         for key, value in self.__dict__.items():
             print(key, " =", value)
 
     def display_info(self):
-        print("\n---- RRD Info ----")
+        print("\n---- RRD. Info ----")
         print(self.file)
         print(rrdtool.info(self.file))
 
@@ -74,7 +109,7 @@ class RRD:
 
     def all_on_one_graph(self):
         print("\n---- RRD. All one graph ----")
-        path_to_save = "graphs/"
+        path_to_save = "graphs/" + self.folder + "/"
 
         for column in self.list_ds:
             path_to_save += "_" + column

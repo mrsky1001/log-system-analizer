@@ -1,15 +1,24 @@
 import csv
 import subprocess
-import openpyxl
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import rrdtool
 import re, xmljson
+import warnings
+warnings.filterwarnings("ignore")
+
 import os
 from tabulate import tabulate
 
 from RRD import RRD
+
+
+def set_id(arr):
+    i = 0
+    for item in arr:
+        i += 1
+        item.id = str(i)
 
 
 class MenuItem:
@@ -30,8 +39,8 @@ class RRDFactory:
         self.folder = folder
         self.list_all_params = []
         self.list_rrd = []
+        self.selected_rrd = RRD
         self.parse_all_rrd()
-
         self.set_menu()
 
     def parse_all_rrd(self):
@@ -86,6 +95,8 @@ class RRDFactory:
                             self.list_all_params.append(str(rrd.name_host) + "." + str(ds))
                     except Exception as e:
                         print(e)
+        if len(self.list_rrd) > 0:
+            self.selected_rrd = self.list_rrd[0]
         print("Complete load.")
 
         return self.list_all_params
@@ -93,14 +104,65 @@ class RRDFactory:
     def set_menu(self):
         self.list_menu.append(MenuItem("Display params", self.display_params))
         self.list_menu.append(MenuItem("Display list rrd-files", self.display_list_rrd_files))
-        self.list_menu.append(MenuItem("Load RRD-file", str("")))
-        self.list_menu.append(MenuItem("Parase to csv all rrd-files", self.csv_all_rrd))
+        self.list_menu.append(MenuItem("Select RRD-file", self.select_rrd))
+        self.list_menu.append(MenuItem("Display menu selected RRD-file", self.selected_rrd.display_menu))
+        self.list_menu.append(MenuItem("Parse to csv all rrd-files", self.csv_all_rrd))
         self.list_menu.append(MenuItem("Correlation selected rrd", self.correlation_matrix))
 
-        i = 0
-        for item in self.list_menu:
-            i += 1
-            item.id = str(i)
+        set_id(self.list_menu)
+
+    def select_rrd(self):
+        print("\n---- RRD FACTORY. Select rrd-file ----")
+
+        types_input = [MenuItem("Search on name of param", self.search_rrd_on_param),
+                       MenuItem("Search on name of file", self.search_rrd_on_filename)]
+
+        set_id(types_input)
+
+        for item in types_input:
+            print(str(item.id) + str(". " + item.name))
+
+        ans = input("Select type input:")
+
+        try:
+            for item in types_input:
+                if item.id == ans:
+                    self.display_list_rrd_files()
+                    item.function()
+                    break
+        except Exception as e:
+            print("Error: ")
+            print(e)
+
+    def search_rrd_on_param(self):
+        print("\n---- RRD FACTORY. Search rrd on param ----")
+        param = input("Input name of rrd: ")
+
+        for rrd in self.list_rrd:
+            if rrd.name_host == param:
+                self.selected_rrd = rrd
+                print("Search successful.")
+                break
+
+        if type(self.selected_rrd) is not RRD:
+            print("Not found!")
+        else:
+            self.selected_rrd.display_params()
+
+        return self.selected_rrd
+
+    def search_rrd_on_filename(self):
+        print("\n---- RRD FACTORY. Search rrd on filename ----")
+        param = input("Input filename of rrd: ")
+
+        self.selected_rrd = self.search_rrd(param)
+
+        if type(self.selected_rrd) is not RRD:
+            print("Not found!")
+        else:
+            self.selected_rrd.display_params()
+
+        return self.selected_rrd
 
     def display_params(self):
         print("\n---- RRD FACTORY. Params ----")
@@ -110,6 +172,7 @@ class RRDFactory:
         print("height = " + str(self.height))
         print("width = " + str(self.width))
         print("folder = " + str(self.folder))
+        print("selected_rrd = " + str(self.selected_rrd.file_name))
 
     def display_menu(self):
         print("\n---- RRD FACTORY. Menu ----")
@@ -188,22 +251,19 @@ class RRDFactory:
                    quotechar="", quoting=csv.QUOTE_NONE)
         return df1
 
+    def search_rrd(self, file_name):
+        for rrd in self.list_rrd:
+            if rrd.file_name == file_name or re.sub(".rrd", "", rrd.file_name) == file_name:
+                print("Search successful.")
+                return rrd
+
     def correlation_matrix(self):
         print("\n---- RRD FACTORY. Correlation  ----")
 
         self.display_list_rrd_files()
 
-        name_rrd1 = input("Input name rrd 1: ")
-        name_rrd2 = input("Input name rrd 2: ")
-
-        rrd1 = ""
-        rrd2 = ""
-
-        for rrd in self.list_rrd:
-            if rrd.name_host == name_rrd1:
-                rrd1 = rrd
-            if rrd.name_host == name_rrd2:
-                rrd2 = rrd
+        rrd1 = self.search_rrd(input("Input file name of rrd 1: "))
+        rrd2 = self.search_rrd(input("Input file name of rrd 2: "))
 
         if type(rrd1) is not RRD or type(rrd2) is not RRD:
             print("Incorrect input!")
