@@ -5950,8 +5950,10 @@ $VAR1 = {
                     }
         };
 
-open($fh, '>', 'graphs/table.html');
-open($fcsv, '>', 'csv/table_description_params_rrd.csv');
+mkdir $ARGV[0];
+
+open($fh, '>', "$ARGV[0]/table.html");
+open($fcsv, '>', "$ARGV[0]/table_description_params_rrd.csv");
 sub pr_csv{
   print $fcsv "$_[0]";
 }

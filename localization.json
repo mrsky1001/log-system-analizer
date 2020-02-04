@@ -1,0 +1,40 @@
+{
+  "eng": {
+    "menu_rrd_factory": {
+      "display_settings": "Display settings",
+      "display_list_rrd_files": "Display list rrd-files",
+      "select_rrd_file": "Select rrd-file",
+      "display_menu_selected_rrd_file": "Display menu selected rrd-file",
+      "export_params_all_rdd_files_to_csv": "Export params all rrd-files to csv",
+      "correlation_rrd_files": "Correlation rrd-files",
+      "change_lang": "Change language",
+      "exit": "Exit"
+    },
+    "menu_selected_rrd": {
+      "display_settings": "Display settings",
+      "plot_graph_by_one_param": "Plot graph by one param",
+      "plot_graph_by_all_param": "Plot graph by all params",
+      "export_params_to_csv": "Export params to csv",
+      "back_to_main_menu": "Back to main menu"
+    }
+  },
+  "rus": {
+    "menu_rrd_factory": {
+      "display_settings": "Отобразить настройки",
+      "display_list_rrd_files": "Отоборазить список rrd-файлов",
+      "select_rrd_file": "Выбрать rrd-файл",
+      "display_menu_selected_rrd_file": "Отобразить меню выбранного rrd-файла",
+      "export_params_all_rdd_files_to_csv": "Экспорт параметров всех rrd-файлов в csv",
+      "correlation_rrd_files": "Вычислить корреляцию rrd-файлов",
+      "change_lang": "Изменить язык",
+      "exit": "Выйти из программы"
+    },
+    "menu_selected_rrd": {
+      "display_settings": "Отобразить настройки",
+      "plot_graph_by_one_param": "Построить график по одному парметру",
+      "plot_graph_by_all_param": "Построить график по всем парметрам",
+      "export_params_to_csv": "Экспорт параметров в csv",
+      "back_to_main_menu": "Вернуться в основное меню"
+    }
+  }
+}

@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import rrdtool
-import re, xmljson
+import re
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -12,48 +12,24 @@ import os
 from tabulate import tabulate
 
 from RRD import RRD
-
-
-def set_id(arr):
-    i = 0
-    for item in arr:
-        i += 1
-        item.id = str(i)
-
-
-class MenuItem:
-    def __init__(self, name, function):
-        self.id = 0
-        self.name = name
-        self.function = function
-
+from MenuFactory import MenuItem, set_id
 
 class RRDFactory:
-    def __init__(self, folder, start_point, end_point, type_command, height, width):
-        self.list_menu = []
-        self.start_point = start_point
-        self.end_point = end_point
-        self.type_command = type_command
-        self.height = height
-        self.width = width
-        self.folder = folder
+    def __init__(self, settings):
+        self.settings = settings
         self.list_all_params = []
         self.list_rrd = []
+        self.list_item_menu = []
         self.selected_rrd = RRD
-        self.parse_all_rrd()
-        self.set_menu()
 
     def parse_all_rrd(self):
-        print("\n---- RRD FACTORY. Load params from rrd-files ----")
-        print("start parse ngraph ...")
+        print("Parsing ngraph for get a description of params ...")
         directory = "csv/"
 
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        subprocess.Popen(["perl", "parsengraph.pl"], stdout=subprocess.PIPE)
-        print("Complete parse.")
-
+        subprocess.Popen(["perl", "parsengraph.pl", self.settings.path_to_description_of_params], stdout=subprocess.PIPE)
         descriptions = []
 
         with open(directory + "table_description_params_rrd.csv", "r", newline="") as file:
@@ -62,7 +38,7 @@ class RRDFactory:
                 descriptions.append(row)
 
         print("start load rrds...")
-        for root, dirs, files in os.walk(self.folder):
+        for root, dirs, files in os.walk(self.settings.path_to_rrd_database):
             for filename in files:
                 if filename.endswith(".rrd"):
                     try:
@@ -80,13 +56,13 @@ class RRDFactory:
 
                         rrd = RRD(name_host=name,
                                   description=description,
-                                  folder=root,
+                                  path_to_database=root,
                                   file_name=filename,
-                                  start_point=self.start_point,
-                                  end_point=self.end_point,
-                                  type_command=self.type_command,
-                                  height=self.height,
-                                  width=self.width)
+                                  start_point=self.settings.start_point,
+                                  end_point=self.settings.end_point,
+                                  type_command=self.settings.type_command,
+                                  height=self.settings.height,
+                                  width=self.settings.width)
 
                         list_ds = rrd.parse_ds
                         self.list_rrd.append(rrd)
@@ -101,17 +77,7 @@ class RRDFactory:
 
         return self.list_all_params
 
-    def set_menu(self):
-        self.list_menu.append(MenuItem("Display params", self.display_params))
-        self.list_menu.append(MenuItem("Display list rrd-files", self.display_list_rrd_files))
-        self.list_menu.append(MenuItem("Select RRD-file", self.select_rrd))
-        self.list_menu.append(MenuItem("Display menu selected RRD-file", self.selected_rrd.display_menu))
-        self.list_menu.append(MenuItem("Parse to csv all rrd-files", self.csv_all_rrd))
-        self.list_menu.append(MenuItem("Correlation selected rrd", self.correlation_matrix))
-
-        set_id(self.list_menu)
-
-    def select_rrd(self):
+    def select_rrd_file(self):
         print("\n---- RRD FACTORY. Select rrd-file ----")
 
         types_input = [MenuItem("Search on name of param", self.search_rrd_on_param),
@@ -147,7 +113,7 @@ class RRDFactory:
         if type(self.selected_rrd) is not RRD:
             print("Not found!")
         else:
-            self.selected_rrd.display_params()
+            self.selected_rrd.display_settings()
 
         return self.selected_rrd
 
@@ -160,61 +126,29 @@ class RRDFactory:
         if type(self.selected_rrd) is not RRD:
             print("Not found!")
         else:
-            self.selected_rrd.display_params()
+            self.selected_rrd.display_settings()
 
         return self.selected_rrd
 
-    def display_params(self):
-        print("\n---- RRD FACTORY. Params ----")
-        print("start_point = " + str(self.start_point))
-        print("end_point = " + str(self.end_point))
-        print("type_command = " + str(self.type_command))
-        print("height = " + str(self.height))
-        print("width = " + str(self.width))
-        print("folder = " + str(self.folder))
-        print("selected_rrd = " + str(self.selected_rrd.file_name))
-
-    def display_menu(self):
-        print("\n---- RRD FACTORY. Menu ----")
-
-        for item in self.list_menu:
-            print(str(item.id) + str(". " + item.name))
-
-        ans = input("Selection: ")
-
-        try:
-            for item in self.list_menu:
-                if item.id == ans:
-                    item.function()
-                    break
-        except Exception as e:
-            print("Error: ")
-            print(e)
-
-        self.display_menu()
-
     def display_list_rrd_files(self):
-        print("\n---- RRD FACTORY. List rrd-files ----")
         list_headers = ["name", "description", "file"]
         list_rows = []
 
         for rrd in sorted(self.list_rrd, key=lambda rrd: rrd.name_host):
             list_rows.append(
-                [rrd.name_host, rrd.description, re.findall("[^/]*\w+$", rrd.folder)[0] + '/' + rrd.file_name])
+                [rrd.name_host, rrd.description, re.findall("[^/]*\w+$", rrd.path_to_database)[0] + '/' + rrd.file_name])
 
         table = tabulate(list_rows, headers=list_headers, tablefmt='orgtbl')
         with open("csv/table_description_params_rrd.txt", 'w') as the_file:
             the_file.write(table)
         print(table)
 
-    def csv_all_rrd(self):
-        print("\n---- RRD FACTORY. Generate CSV from all rrd ----")
+    def export_params_all_rdd_files_to_csv(self):
 
         for rrd in self.list_rrd:
             print(rrd.csv_export())
 
     def csv_concat(self, rrd1, rrd2):
-        print("\n---- RRD FACTORY. Generate CSV concatenation rrd ----")
 
         f1 = rrd1.csv_export()
         f2 = rrd2.csv_export()
@@ -257,8 +191,7 @@ class RRDFactory:
                 print("Search successful.")
                 return rrd
 
-    def correlation_matrix(self):
-        print("\n---- RRD FACTORY. Correlation  ----")
+    def correlation_rrd_files(self):
 
         self.display_list_rrd_files()
 

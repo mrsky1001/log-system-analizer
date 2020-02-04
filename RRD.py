@@ -1,8 +1,7 @@
 import os
 
 import rrdtool
-import tempfile
-import re, xmljson
+import re
 from datetime import datetime
 from pandas.io import json
 
@@ -12,12 +11,12 @@ list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "e
 
 
 class RRD:
-    def __init__(self, name_host, description, folder, file_name, start_point, end_point, type_command, height, width):
+    def __init__(self, name_host, description, path_to_database, file_name, start_point, end_point, type_command, height, width):
         self.name_host = name_host
         self.description = description
-        self.folder = folder
+        self.path_to_database = path_to_database
         self.file_name = file_name
-        self.file = self.folder + '/' + self.file_name
+        self.file = self.path_to_database + '/' + self.file_name
         self.start_point = start_point
         self.end_point = end_point
         self.first = rrdtool.first(self.file)
@@ -27,8 +26,6 @@ class RRD:
         self.height = height
         self.width = width
         self.list_ds = self.parse_ds
-        self.list_menu = []
-        self.set_menu()
 
     @property
     def parse_ds(self):
@@ -88,7 +85,10 @@ class RRD:
         print(rrdtool.info(self.file))
 
     def graph(self, column):
-        path_to_save = "graphs/" + column + ".png"
+        directory = "graphs/" + column
+
+        path_to_save = directory + ".png"
+
         print("\nStart generate " + path_to_save + "...")
 
         try:
@@ -108,8 +108,10 @@ class RRD:
         print("Finish!")
 
     def all_on_one_graph(self):
-        print("\n---- RRD. All one graph ----")
-        path_to_save = "graphs/" + self.folder + "/"
+        path_to_save = "graphs/" + self.path_to_database
+
+        if not os.path.exists(path_to_save):
+            os.makedirs(path_to_save)
 
         for column in self.list_ds:
             path_to_save += "_" + column
@@ -145,7 +147,6 @@ class RRD:
             print(e)
 
     def all_graph(self):
-        print("\n---- RRD Graph's ----")
         print(self.file)
         for column in self.list_ds:
             self.graph(column)

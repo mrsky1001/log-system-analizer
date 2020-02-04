@@ -1,0 +1,17 @@
+{
+  "default": {
+    "path_to_rrd_database": "rrd_database/",
+    "path_to_exports": "exports/",
+    "path_to_description_of_params": "description_of_params/",
+    "path_to_merges_params": "merges_params/",
+    "path_to_params_rrd": "params_rrd/",
+    "path_to_graphs": "graphs/",
+    "path_to_localization": "localization.json",
+    "lang": "eng",
+    "start_point": "1419000000",
+    "end_point": "now",
+    "type_command": "AVERAGE",
+    "height": "800",
+    "width": "1024"
+  }
+}

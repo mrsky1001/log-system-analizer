@@ -1,10 +1,11 @@
 from RRDFactory import RRDFactory
+from Settings import Settings
+from MenuFactory import MenuFactory, init_menu_rrd_factory
 
-rrd_factory = RRDFactory(folder="rrd/",
-                         start_point="1419000000",
-                         end_point="now",
-                         type_command="AVERAGE",
-                         height=800,
-                         width=1024)
+settings = Settings()
 
-rrd_factory.display_menu()
+rrd_factory = RRDFactory(settings=settings)
+rrd_factory.parse_all_rrd()
+
+menu_rrd_factory = MenuFactory('Main menu', lambda: init_menu_rrd_factory(settings, rrd_factory))
+menu_rrd_factory.display_menu_repeat()
