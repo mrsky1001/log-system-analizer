@@ -24,7 +24,7 @@ class RRD:
         self.end_point = end_point
         self.first = rrdtool.first(self.file)
         self.last = rrdtool.last(self.file)
-        # self.lastupdate = rrdtool.lastupdate(self.file)
+        self.lastupdate = rrdtool.lastupdate(self.file)
         self.type_command = type_command
         self.height = height
         self.width = width
@@ -69,14 +69,14 @@ class RRD:
 
         self.display_menu()
 
-    def set_menu(self):
-        self.list_menu.append(RRDFactory.MenuItem("Display params", self.display_params))
-        self.list_menu.append(RRDFactory.MenuItem("Show graph", self.all_on_one_graph))
-        self.list_menu.append(RRDFactory.MenuItem("Show all graph", self.all_graph))
-        self.list_menu.append(RRDFactory.MenuItem("Parse to csv rrd-file", self.csv_export))
-        self.list_menu.append(RRDFactory.MenuItem("Exit", ""))
-
-        RRDFactory.set_id(self.list_menu)
+    # def set_menu(self):
+    #     self.list_menu.append(RRDFactory.MenuItem("Display params", self.display_params))
+    #     self.list_menu.append(RRDFactory.MenuItem("Show graph", self.all_on_one_graph))
+    #     self.list_menu.append(RRDFactory.MenuItem("Show all graph", self.all_graph))
+    #     self.list_menu.append(RRDFactory.MenuItem("Parse to csv rrd-file", self.csv_export))
+    #     self.list_menu.append(RRDFactory.MenuItem("Exit", ""))
+    #
+    #     RRDFactory.set_id(self.list_menu)
 
     def display_params(self):
         print_text(settings.local.params_rrd, THEMES_MESSAGE.INFO)

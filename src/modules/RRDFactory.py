@@ -124,7 +124,7 @@ class RRDFactory:
         if type(self.selected_rrd) is not RRD:
             print_text(settings.local.not_found, THEMES_MESSAGE.WARNING)
         else:
-            self.selected_rrd.display_settings()
+            self.selected_rrd.display_params()
 
         return self.selected_rrd
 
@@ -137,7 +137,7 @@ class RRDFactory:
         if type(self.selected_rrd) is not RRD:
             print_text(settings.local.not_found, THEMES_MESSAGE.WARNING)
         else:
-            self.selected_rrd.display_settings()
+            self.selected_rrd.display_params()
 
         return self.selected_rrd
 

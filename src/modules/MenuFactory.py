@@ -39,25 +39,17 @@ def init_menu_selected_rrd(settings, selected_rrd):
     list_item_menu = []
 
     list_item_menu.append(
-        MenuItem(settings.local.display_settings, selected_rrd.display_settings))
+        MenuItem(settings.local.display_params, selected_rrd.display_params))
 
-    list_item_menu.append(MenuItem(settings.local.display_list_rrd_files,
-                                   selected_rrd.display_list_rrd_files))
+    list_item_menu.append(MenuItem(settings.local.plot_graph_by_one_param,
+                                   selected_rrd.all_on_one_graph))
     list_item_menu.append(
-        MenuItem(settings.local.select_rrd_file, selected_rrd.select_rrd_file))
+        MenuItem(settings.local.plot_graph_by_all_param, selected_rrd.all_graph))
 
-    list_item_menu.append(MenuItem(settings.local.display_menu_selected_rrd_file,
-                                   selected_rrd.selected_rrd.display_menu))
+    list_item_menu.append(MenuItem(settings.local.export_params_to_csv,
+                                   selected_rrd.selected_rrd.csv_export))
 
-    list_item_menu.append(MenuItem(settings.local.export_params_all_rdd_files_to_csv,
-                                   selected_rrd.export_params_all_rdd_files_to_csv))
-
-    list_item_menu.append(MenuItem(settings.local.correlation_rrd_files,
-                                   selected_rrd.correlation_rrd_files))
-
-    list_item_menu.append(MenuItem(settings.local.change_localization, settings.change_localization))
-
-    list_item_menu.append(MenuItem(settings.local.exit, exit))
+    list_item_menu.append(MenuItem(settings.local.back_to_main_menu))
 
     return list_item_menu
 

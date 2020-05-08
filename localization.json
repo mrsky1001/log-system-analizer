@@ -1,6 +1,7 @@
 {
   "eng": {
     "display_settings": "Display settings",
+    "display_params": "Display params",
     "display_list_rrd_files": "Display list RRD-files",
     "select_rrd_file": "Select RRD-file",
     "display_menu_selected_rrd_file": "Display menu selected RRD-file",
@@ -57,6 +58,7 @@
   },
   "rus": {
     "display_settings": "Отобразить настройки",
+    "display_params": "Отобразить параметры",
     "display_list_rrd_files": "Отобразить список RRD-файлов",
     "select_rrd_file": "Выбрать RRD-файл",
     "display_menu_selected_rrd_file": "Отобразить меню выбранного RRD-файла",
@@ -78,7 +80,7 @@
     "initialization_menu_rrd_database_factory": "Инициализация основного меню...",
     "parsing_ngraph": "Парсинг параметров описания показателей RRDatabase...",
     "parsing_ngraph_failed": "Не удалось выполнить парсинг!",
-    "menu_select_rrd_file": "\n---- Меню выбранного RRD-файла ----",
+    "menu_select_rrd_file": "\n---- Меню выбора RRD-файла ----",
     "search_on_name_of_param": "Поиск по наименованию параметра",
     "search_on_name_of_file": "Поиск по наименованию файла",
     "input": "Ввод: ",
@@ -97,7 +99,7 @@
     "incorrect_input": "Не корректные параметры ввода!",
     "start_correlation": "Старт вычисления коэффициентов корреляции...",
     "complete_correlation": "Вычисление коэффициентов корреляции завершено.",
-    "menu_rrd": "\n---- Меню выбранного RRD файла ----",
+    "menu_rrd": "\n---- Меню выборанного RRD файла ----",
     "params_rrd": "\n---- Параметры выбранного RRD файла ----",
     "info_rrd": "\n---- Информация о выбранном RRD файле ----",
     "complete_graph": "Завершено построение графика!",
@@ -110,6 +112,5 @@
     "show_table_params": "Вывести таблицу на экран?[Да, Нет]",
     "yes": "Да",
     "no": "Нет"
-
   }
 }
