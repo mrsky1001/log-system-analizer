@@ -10,7 +10,6 @@ def set_id(arr):
 
 def init_menu_rrd_factory(settings, rrd_factory):
     print_text(settings.local.initialization_menu_rrd_database_factory)
-    print_text(settings.local.local + settings.lang)
 
     list_item_menu = []
 
@@ -29,7 +28,7 @@ def init_menu_rrd_factory(settings, rrd_factory):
     list_item_menu.append(
         MenuItem(settings.local.correlation_rrd_files, rrd_factory.correlation_rrd_files))
 
-    list_item_menu.append(MenuItem(settings.local.change_lang, settings.change_lang))
+    list_item_menu.append(MenuItem(settings.local.change_localization, settings.change_localization))
 
     list_item_menu.append(MenuItem(settings.local.exit, exit))
 
@@ -56,7 +55,7 @@ def init_menu_selected_rrd(settings, selected_rrd):
     list_item_menu.append(MenuItem(settings.local.correlation_rrd_files,
                                    selected_rrd.correlation_rrd_files))
 
-    list_item_menu.append(MenuItem(settings.local.change_lang, settings.change_lang))
+    list_item_menu.append(MenuItem(settings.local.change_localization, settings.change_localization))
 
     list_item_menu.append(MenuItem(settings.local.exit, exit))
 
@@ -71,8 +70,9 @@ class MenuItem:
 
 
 class MenuFactory:
-    def __init__(self, title, init_function):
+    def __init__(self, title, settings, init_function):
         self.title = title
+        self.settings = settings
         self.list_item_menu = []
         self.init_function = init_function
 
@@ -89,7 +89,7 @@ class MenuFactory:
         for item in self.list_item_menu:
             print_text(str(item.id) + str("." + item.name))
 
-        ans = input("Selection:")
+        ans = input(self.settings.local.input)
 
         try:
             for item in self.list_item_menu:
@@ -97,5 +97,5 @@ class MenuFactory:
                     item.function()
                     break
         except Exception as e:
-            print_text("Error:")
+            print_text(self.settings.local.error)
             print_text(e)

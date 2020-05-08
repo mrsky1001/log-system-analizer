@@ -29,7 +29,7 @@ class Settings:
         self.init()
 
     def init(self):
-        print_text("settings.localization")
+        print_text("Loading settings...")
 
         with open(self.path) as f:
             data = json.load(f)
@@ -57,10 +57,14 @@ class Settings:
         self.lang = lang
 
         with open(self.path_to_localization) as f:
-            self.local = json.loads(json.dumps(json.load(f)[lang]), object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
+            self.local = json.loads(json.dumps(json.load(f)[lang]),
+                                    object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
+
+        print_text(self.local.localization + self.lang)
 
     def display_settings(self):
-        print_text("path = " + self.path, THEMES_MESSAGE.INFO)
+        print_text(self.local.main_settings, THEMES_MESSAGE.INFO)
+        print_text("path = " + self.path)
         print_text("root = " + self.root)
         print_text("root_resources = " + self.root_resources)
         print_text("root_classes = " + self.root_classes)
@@ -79,7 +83,7 @@ class Settings:
         print_text("height_graph = " + self.height_graph)
         print_text("width_graph = " + self.width_graph)
 
-    def change_lang(self):
+    def change_localization(self):
         menu = MenuFactory("Change language", lambda: [MenuItem("Russian", lambda: self.load_localization("rus")),
                                                        MenuItem("English", lambda: self.load_localization("eng"))])
 

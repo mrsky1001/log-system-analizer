@@ -8,6 +8,7 @@ from pandas.io import json
 from src.classes.OpenFile import open_file, FORMATS_OPEN
 from src.classes.PrintText import print_text, THEMES_MESSAGE
 from src.modules import RRDFactory
+from src.modules.Settings import settings
 
 list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "exit"]
 
@@ -28,6 +29,8 @@ class RRD:
         self.height = height
         self.width = width
         self.list_ds = self.parse_ds
+        self.list_menu = []
+
 
     @property
     def parse_ds(self):
@@ -40,17 +43,17 @@ class RRD:
                 res = re.sub(r"].index", "", res)
                 list_ds.append(res)
         except Exception as e:
-            print_text("Error:", THEMES_MESSAGE.ERROR)
+            print_text(settings.local.error, THEMES_MESSAGE.ERROR)
             print_text(e, THEMES_MESSAGE.ERROR)
         return list_ds
 
     def display_menu(self):
-        print("\n---- RRD. Menu ----")
+        print_text(settings.local.menu_rrd)
 
         for item in self.list_menu:
-            print(str(item.id) + str(". " + item.name))
+            print_text(str(item.id) + str(". " + item.name))
 
-        ans = input("Selection: ")
+        ans = input(settings.local.input)
 
         if ans == str(len(self.list_menu)):
             return
@@ -61,7 +64,7 @@ class RRD:
                     item.function()
                     break
         except Exception as e:
-            print("Error: ")
+            print_text("Error: ")
             print_text(e, THEMES_MESSAGE.ERROR)
 
         self.display_menu()
@@ -76,22 +79,22 @@ class RRD:
         RRDFactory.set_id(self.list_menu)
 
     def display_params(self):
-        print("\n---- RRD. params ----")
+        print_text(settings.local.params_rrd, THEMES_MESSAGE.INFO)
 
         for key, value in self.__dict__.items():
-            print(key, " =", value)
+            print_text(key, " =", value)
 
     def display_info(self):
-        print("\n---- RRD. Info ----")
-        print(self.file)
-        print(rrdtool.info(self.file))
+        print_text(settings.local.info_rrd, THEMES_MESSAGE.INFO)
+        print_text(self.file)
+        print_text(rrdtool.info(self.file))
 
     def graph(self, column):
         directory = "graphs/" + column
 
         path_to_save = directory + ".png"
 
-        print("\nStart generate " + path_to_save + "...")
+        print_text("\nStart generate " + path_to_save + "...")
 
         try:
             rrdtool.graph(path_to_save,
@@ -105,9 +108,10 @@ class RRD:
                           "CDEF:cdef=" + column + ",1,*",
                           "LINE2:cdef#FF6666:\"" + column + "\"",
                           "AREA:cdef#FF6666")
-        except Exception:
-            print("error")
-        print("Finish!")
+        except Exception as e:
+            print_text(settings.local.error, THEMES_MESSAGE.ERROR)
+            print_text(e, THEMES_MESSAGE.ERROR)
+        print_text(settings.local.complete_graph, THEMES_MESSAGE.SUCCESS)
 
     def all_on_one_graph(self):
         path_to_save = "graphs/" + self.path_to_database
@@ -120,7 +124,7 @@ class RRD:
 
         path_to_save += ".png"
 
-        print("\nStart generate " + path_to_save + "...")
+        print_text(settings.local.start_generate + path_to_save + "...")
 
         colors = ["#ff0000", "#007fff", "#26d100", "#e0e000"]
         count_color = 0
@@ -144,16 +148,16 @@ class RRD:
 
         try:
             rrdtool.graph(rrd_args)
-            print("Finish!")
+            print_text(settings.local.complete_graph, THEMES_MESSAGE.SUCCESS)
         except Exception as e:
             print_text(e, THEMES_MESSAGE.ERROR)
 
     def all_graph(self):
-        print(self.file)
+        print_text(self.file)
         for column in self.list_ds:
             self.graph(column)
 
-        print("\nFinish generate graph's!")
+        print_text(settings.local.complete_graphs, THEMES_MESSAGE.SUCCESS)
 
     def dump(self):
         return rrdtool.dump(self.file)
