@@ -6,17 +6,21 @@ import matplotlib.pyplot as plt
 import rrdtool
 import re
 import warnings
+
+from Main import settings
+from src.classes.OpenFile import open_file
+
 warnings.filterwarnings("ignore")
 
 import os
 from tabulate import tabulate
 
-from RRD import RRD
-from MenuFactory import MenuItem, set_id
+from src.modules.RRD import RRD
+from src.modules.MenuFactory import MenuItem, set_id
+
 
 class RRDFactory:
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self, ):
         self.list_all_params = []
         self.list_rrd = []
         self.list_item_menu = []
@@ -24,21 +28,18 @@ class RRDFactory:
 
     def parse_all_rrd(self):
         print("Parsing ngraph for get a description of params ...")
-        directory = "csv/"
+        directory = settings.path_to_exports + "csv/"
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        subprocess.Popen(["perl", "parsengraph.pl", self.settings.path_to_description_of_params], stdout=subprocess.PIPE)
+        subprocess.Popen(["perl", "parsengraph.pl", settings.path_to_description_of_params], stdout=subprocess.PIPE)
         descriptions = []
 
-        with open(directory + "table_description_params_rrd.csv", "r", newline="") as file:
+        with open_file(directory + "table_description_params_rrd.csv", "r") as file:
             reader = csv.reader(file)
             for row in reader:
                 descriptions.append(row)
 
         print("start load rrds...")
-        for root, dirs, files in os.walk(self.settings.path_to_rrd_database):
+        for root, dirs, files in os.walk(settings.path_to_rrd_database):
             for filename in files:
                 if filename.endswith(".rrd"):
                     try:
@@ -58,11 +59,11 @@ class RRDFactory:
                                   description=description,
                                   path_to_database=root,
                                   file_name=filename,
-                                  start_point=self.settings.start_point,
-                                  end_point=self.settings.end_point,
-                                  type_command=self.settings.type_command,
-                                  height=self.settings.height,
-                                  width=self.settings.width)
+                                  start_point=settings.start_point,
+                                  end_point=settings.end_point,
+                                  type_command=settings.type_command,
+                                  height=settings.height,
+                                  width=settings.width)
 
                         list_ds = rrd.parse_ds
                         self.list_rrd.append(rrd)
@@ -136,10 +137,11 @@ class RRDFactory:
 
         for rrd in sorted(self.list_rrd, key=lambda rrd: rrd.name_host):
             list_rows.append(
-                [rrd.name_host, rrd.description, re.findall("[^/]*\w+$", rrd.path_to_database)[0] + '/' + rrd.file_name])
+                [rrd.name_host, rrd.description,
+                 re.findall("[^/]*\w+$", rrd.path_to_database)[0] + '/' + rrd.file_name])
 
         table = tabulate(list_rows, headers=list_headers, tablefmt='orgtbl')
-        with open("csv/table_description_params_rrd.txt", 'w') as the_file:
+        with open("src/resources/csv/table_description_params_rrd.txt", 'w') as the_file:
             the_file.write(table)
         print(table)
 

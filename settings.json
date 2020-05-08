@@ -1,5 +1,9 @@
 {
   "default": {
+    "root": "./",
+    "root_resources": "src/resources/",
+    "root_classes": "src/classes/",
+    "root_modules": "src/modules/",
     "path_to_rrd_database": "rrd_database/",
     "path_to_exports": "exports/",
     "path_to_description_of_params": "description_of_params/",

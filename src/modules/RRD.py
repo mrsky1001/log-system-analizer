@@ -5,7 +5,7 @@ import re
 from datetime import datetime
 from pandas.io import json
 
-import RRDFactory
+from src.modules import RRDFactory
 
 list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "exit"]
 

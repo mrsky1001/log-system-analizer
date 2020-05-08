@@ -1,8 +1,8 @@
 correlation*/
-csv*/
+src/resources/csv/
 rrd/
 .idea/
-csv/
+src/resources/csv/
 images/
 graphs/
 venv/
