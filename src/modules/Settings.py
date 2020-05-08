@@ -1,16 +1,17 @@
 import json
+from collections import namedtuple
 
 from src.modules.MenuFactory import MenuFactory, MenuItem
-from src.classes.PrintText import print_text, THEMES
+from src.classes.PrintText import print_text, THEMES_MESSAGE
 
 
 class Settings:
     def __init__(self, path_to_settings="settings.json"):
         self.path = path_to_settings
-        self.root = './'
-        self.root_resources = 'src/resources'
-        self.root_classes = 'src/classes'
-        self.root_modules = 'src/modules'
+        self.root = "./"
+        self.root_resources = "src/resources"
+        self.root_classes = "src/classes"
+        self.root_modules = "src/modules"
         self.path_to_rrd_database = "rrd_database/"
         self.path_to_exports = "exports/"
         self.path_to_description_of_params = self.path_to_exports + "description_of_params/"
@@ -18,7 +19,7 @@ class Settings:
         self.path_to_params_rrd = self.path_to_exports + "params_rrd/"
         self.path_to_graphs = self.path_to_exports + "graphs/"
         self.path_to_localization = "../../localization.json"
-        self.localization = ""
+        self.local = ""
         self.lang = "eng"
         self.start_point = "1419000000"
         self.end_point = "now"
@@ -28,38 +29,38 @@ class Settings:
         self.init()
 
     def init(self):
-        print_text("Load settings...", THEMES.WARNING)
+        print_text("settings.localization")
 
         with open(self.path) as f:
             data = json.load(f)
-            self.root = data['default']['root']
-            self.root_resources = data['default']['root_resources']
-            self.root_classes = data['default']['root_classes']
-            self.root_modules = data['default']['root_modules']
-            self.path_to_rrd_database = data['default']['path_to_rrd_database']
-            self.path_to_exports = self.root_resources + data['default']['path_to_exports']
-            self.path_to_description_of_params = self.path_to_exports + data['default']['path_to_description_of_params']
-            self.path_to_merges_params = self.path_to_exports + data['default']['path_to_merges_params']
-            self.path_to_params_rrd = self.path_to_exports + data['default']['path_to_params_rrd']
-            self.path_to_graphs = self.path_to_exports + data['default']['path_to_graphs']
-            self.path_to_localization = data['default']['path_to_localization']
-            self.start_point = data['default']['start_point']
-            self.lang = data['default']['lang']
-            self.end_point = data['default']['end_point']
-            self.type_command = data['default']['type_command']
-            self.height_graph = data['default']['height']
-            self.width_graph = data['default']['width']
+            self.root = data["default"]["root"]
+            self.root_resources = data["default"]["root_resources"]
+            self.root_classes = data["default"]["root_classes"]
+            self.root_modules = data["default"]["root_modules"]
+            self.path_to_rrd_database = self.root_resources + data["default"]["path_to_rrd_database"]
+            self.path_to_exports = self.root_resources + data["default"]["path_to_exports"]
+            self.path_to_description_of_params = self.path_to_exports + data["default"]["path_to_description_of_params"]
+            self.path_to_merges_params = self.path_to_exports + data["default"]["path_to_merges_params"]
+            self.path_to_params_rrd = self.path_to_exports + data["default"]["path_to_params_rrd"]
+            self.path_to_graphs = self.path_to_exports + data["default"]["path_to_graphs"]
+            self.path_to_localization = data["default"]["path_to_localization"]
+            self.start_point = data["default"]["start_point"]
+            self.lang = data["default"]["lang"]
+            self.end_point = data["default"]["end_point"]
+            self.type_command = data["default"]["type_command"]
+            self.height_graph = data["default"]["height"]
+            self.width_graph = data["default"]["width"]
             self.load_localization(self.lang)
 
     def load_localization(self, lang):
-        print_text("Load localization...", THEMES.WARNING)
+        print_text("Loading localization...")
         self.lang = lang
 
         with open(self.path_to_localization) as f:
-            self.localization = json.load(f)[lang]
+            self.local = json.loads(json.dumps(json.load(f)[lang]), object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
 
     def display_settings(self):
-        print_text("path = " + self.path, THEMES.INFO)
+        print_text("path = " + self.path, THEMES_MESSAGE.INFO)
         print_text("root = " + self.root)
         print_text("root_resources = " + self.root_resources)
         print_text("root_classes = " + self.root_classes)
@@ -79,8 +80,11 @@ class Settings:
         print_text("width_graph = " + self.width_graph)
 
     def change_lang(self):
-        menu = MenuFactory('Change language', lambda: [MenuItem('Russian', lambda: self.load_localization('rus')),
-                                                       MenuItem('English', lambda: self.load_localization('eng'))])
+        menu = MenuFactory("Change language", lambda: [MenuItem("Russian", lambda: self.load_localization("rus")),
+                                                       MenuItem("English", lambda: self.load_localization("eng"))])
 
         menu.display_menu()
         print_text(self.lang)
+
+
+settings = Settings()

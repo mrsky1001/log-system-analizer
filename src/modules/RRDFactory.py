@@ -7,8 +7,9 @@ import rrdtool
 import re
 import warnings
 
-from Main import settings
-from src.classes.OpenFile import open_file
+from src.classes.PrintText import print_text, THEMES_MESSAGE
+from src.classes.OpenFile import open_file, FORMATS_OPEN
+from src.modules.Settings import settings
 
 warnings.filterwarnings("ignore")
 
@@ -20,25 +21,32 @@ from src.modules.MenuFactory import MenuItem, set_id
 
 
 class RRDFactory:
-    def __init__(self, ):
+    def __init__(self):
         self.list_all_params = []
         self.list_rrd = []
         self.list_item_menu = []
         self.selected_rrd = RRD
 
     def parse_all_rrd(self):
-        print("Parsing ngraph for get a description of params ...")
-        directory = settings.path_to_exports + "csv/"
+        print_text(settings.local.parsing_ngraph)
+        directory = settings.path_to_description_of_params
 
-        subprocess.Popen(["perl", "parsengraph.pl", settings.path_to_description_of_params], stdout=subprocess.PIPE)
+        try:
+            subprocess.Popen(
+                ["perl", settings.root_resources + "parsengraph.pl", settings.path_to_description_of_params],
+                stdout=subprocess.PIPE).wait()
+        except Exception as e:
+            print_text(settings.local.parsing_ngraph_failed, THEMES_MESSAGE.ERROR)
+            print_text(e, THEMES_MESSAGE.ERROR)
+
         descriptions = []
 
-        with open_file(directory + "table_description_params_rrd.csv", "r") as file:
+        with open_file("table_description_params_rrd.csv", directory, "r") as file:
             reader = csv.reader(file)
             for row in reader:
                 descriptions.append(row)
 
-        print("start load rrds...")
+        print_text(settings.local.loading_rrds)
         for root, dirs, files in os.walk(settings.path_to_rrd_database):
             for filename in files:
                 if filename.endswith(".rrd"):
@@ -62,8 +70,8 @@ class RRDFactory:
                                   start_point=settings.start_point,
                                   end_point=settings.end_point,
                                   type_command=settings.type_command,
-                                  height=settings.height,
-                                  width=settings.width)
+                                  height=settings.height_graph,
+                                  width=settings.width_graph)
 
                         list_ds = rrd.parse_ds
                         self.list_rrd.append(rrd)
@@ -71,25 +79,27 @@ class RRDFactory:
                         for ds in list_ds:
                             self.list_all_params.append(str(rrd.name_host) + "." + str(ds))
                     except Exception as e:
-                        print(e)
+                        print_text(e, THEMES_MESSAGE.ERROR)
         if len(self.list_rrd) > 0:
             self.selected_rrd = self.list_rrd[0]
-        print("Complete load.")
+            print_text(settings.local.complete_load_rrds + "(" + str(len(self.list_rrd)) + ")", THEMES_MESSAGE.SUCCESS)
+        else:
+            print_text(settings.local.not_found_rrds, THEMES_MESSAGE.WARNING)
 
         return self.list_all_params
 
     def select_rrd_file(self):
-        print("\n---- RRD FACTORY. Select rrd-file ----")
+        print(settings.local.menu_select_rrd_file)
 
-        types_input = [MenuItem("Search on name of param", self.search_rrd_on_param),
-                       MenuItem("Search on name of file", self.search_rrd_on_filename)]
+        types_input = [MenuItem(settings.local.search_on_name_of_param, self.search_rrd_on_param),
+                       MenuItem(settings.local.search_on_name_of_file, self.search_rrd_on_filename)]
 
         set_id(types_input)
 
         for item in types_input:
             print(str(item.id) + str(". " + item.name))
 
-        ans = input("Select type input:")
+        ans = input(settings.local.input)
 
         try:
             for item in types_input:
@@ -98,50 +108,52 @@ class RRDFactory:
                     item.function()
                     break
         except Exception as e:
-            print("Error: ")
-            print(e)
+            print(settings.local.error)
+            print_text(e, THEMES_MESSAGE.ERROR)
 
     def search_rrd_on_param(self):
-        print("\n---- RRD FACTORY. Search rrd on param ----")
-        param = input("Input name of rrd: ")
+        print(settings.local.menu_of_search_rrd_on_param)
+        param = input(settings.local.input_name_rrd)
 
         for rrd in self.list_rrd:
             if rrd.name_host == param:
                 self.selected_rrd = rrd
-                print("Search successful.")
+                print(settings.local.search_successful)
                 break
 
         if type(self.selected_rrd) is not RRD:
-            print("Not found!")
+            print(settings.local.not_found)
         else:
             self.selected_rrd.display_settings()
 
         return self.selected_rrd
 
     def search_rrd_on_filename(self):
-        print("\n---- RRD FACTORY. Search rrd on filename ----")
-        param = input("Input filename of rrd: ")
+        print(settings.local.menu_of_search_rrd_on_filename)
+        param = input(settings.local.input_filename_rrd)
 
         self.selected_rrd = self.search_rrd(param)
 
         if type(self.selected_rrd) is not RRD:
-            print("Not found!")
+            print(settings.local.not_found)
         else:
             self.selected_rrd.display_settings()
 
         return self.selected_rrd
 
     def display_list_rrd_files(self):
-        list_headers = ["name", "description", "file"]
+        list_headers = [settings.local.name, settings.local.description, settings.local.file]
         list_rows = []
 
         for rrd in sorted(self.list_rrd, key=lambda rrd: rrd.name_host):
             list_rows.append(
                 [rrd.name_host, rrd.description,
-                 re.findall("[^/]*\w+$", rrd.path_to_database)[0] + '/' + rrd.file_name])
+                 re.findall("[^/]*\w+$", rrd.path_to_database)[0] + "/" + rrd.file_name])
 
-        table = tabulate(list_rows, headers=list_headers, tablefmt='orgtbl')
-        with open("src/resources/csv/table_description_params_rrd.txt", 'w') as the_file:
+        table = tabulate(list_rows, headers=list_headers, tablefmt="orgtbl")
+        with open_file("table_description_params_rrd.txt",
+                       settings.path_to_description_of_params,
+                       FORMATS_OPEN.WRITE) as the_file:
             the_file.write(table)
         print(table)
 
@@ -165,9 +177,9 @@ class RRDFactory:
         print(keys2)
 
         for idx, row in df2.iterrows():
-            data = df1[df1['timestamp'] == row['timestamp']]
+            data = df1[df1["timestamp"] == row["timestamp"]]
             if data.empty:
-                print("Warning! Data merge on time stamp is empty.")
+                print_text(settings.local.data_merge_on_time_empty, THEMES_MESSAGE.WARNING)
                 next_idx = len(df1)
                 for key in keys2:
                     df1.at[next_idx, key] = df2.at[idx, key]
@@ -183,30 +195,30 @@ class RRDFactory:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        df1.to_csv(directory + "merge_" + rrd1.name_host + "_" + rrd2.name_host + ".csv", index=False, encoding='utf-8',
+        df1.to_csv(directory + "merge_" + rrd1.name_host + "_" + rrd2.name_host + ".csv", index=False, encoding="utf-8",
                    quotechar="", quoting=csv.QUOTE_NONE)
         return df1
 
     def search_rrd(self, file_name):
         for rrd in self.list_rrd:
             if rrd.file_name == file_name or re.sub(".rrd", "", rrd.file_name) == file_name:
-                print("Search successful.")
+                print(settings.local.search_successful)
                 return rrd
 
     def correlation_rrd_files(self):
 
         self.display_list_rrd_files()
 
-        rrd1 = self.search_rrd(input("Input file name of rrd 1: "))
-        rrd2 = self.search_rrd(input("Input file name of rrd 2: "))
+        rrd1 = self.search_rrd(input(settings.local.input_filename_rrd_number + "1: "))
+        rrd2 = self.search_rrd(input(settings.local.input_filename_rrd_number + "2: "))
 
         if type(rrd1) is not RRD or type(rrd2) is not RRD:
-            print("Incorrect input!")
+            print(settings.local.incorrect_input)
             return
 
         data = self.csv_concat(rrd1, rrd2)
         print(data.to_string)
-        print("Start correlation ...")
+        print(settings.local.start_correlation)
         corrmat = data.corr()
 
         directory = "correlation_table/"
@@ -218,8 +230,8 @@ class RRDFactory:
             path_save = directory + "correlation_" + rrd1.name_host + "_" + rrd2.name_host
             corrmat.to_excel(path_save + ".xlsx")
         except Exception as e:
-            print(e)
-        # with open(path_save + ".txt", 'w') as the_file:
+            print_text(e, THEMES_MESSAGE.ERROR)
+        # with open(path_save + ".txt", "w") as the_file:
         #     the_file.write(corrmat.to)
 
         print(corrmat)
@@ -232,14 +244,18 @@ class RRDFactory:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        plt.savefig(directory + 'correlation_matrix_' + rrd1.name_host + "_" + rrd2.name_host + '.png')
+        plt.savefig(directory + "correlation_matrix_" + rrd1.name_host + "_" + rrd2.name_host + ".png")
         plt.show()
         plt.clf()
         plt.close()
 
         plt.subplots(figsize=(12, 8))
         sns.pairplot(data)
-        plt.savefig(directory + 'correlation_hists_' + rrd1.name_host + "_" + rrd2.name_host + '.png')
+        plt.savefig(directory + "correlation_hists_" + rrd1.name_host + "_" + rrd2.name_host + ".png")
 
         plt.show()
-        print("Complete correlation.")
+        print(settings.local.complete_correlation)
+
+
+rrd_factory = RRDFactory()
+rrd_factory.parse_all_rrd()

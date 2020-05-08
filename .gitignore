@@ -1,10 +1,9 @@
 correlation*/
-src/resources/csv/
-rrd/
+src/resources/rrd_database/
 .idea/
-src/resources/csv/
-images/
-graphs/
+src/resources/export/
+src/resources/images/
+src/resources/graphs/
 venv/
 .ipynb_checkpoints/
 # Byte-compiled / optimized / DLL files

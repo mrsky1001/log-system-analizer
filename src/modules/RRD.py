@@ -5,6 +5,8 @@ import re
 from datetime import datetime
 from pandas.io import json
 
+from src.classes.OpenFile import open_file, FORMATS_OPEN
+from src.classes.PrintText import print_text, THEMES_MESSAGE
 from src.modules import RRDFactory
 
 list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "exit"]
@@ -16,12 +18,12 @@ class RRD:
         self.description = description
         self.path_to_database = path_to_database
         self.file_name = file_name
-        self.file = self.path_to_database + '/' + self.file_name
+        self.file = self.path_to_database + "/" + self.file_name
         self.start_point = start_point
         self.end_point = end_point
         self.first = rrdtool.first(self.file)
         self.last = rrdtool.last(self.file)
-        self.lastupdate = rrdtool.lastupdate(self.file)
+        # self.lastupdate = rrdtool.lastupdate(self.file)
         self.type_command = type_command
         self.height = height
         self.width = width
@@ -33,13 +35,13 @@ class RRD:
 
         try:
             info = rrdtool.info(self.file)
-            for ds in re.findall(r'ds\[\w+]\.index', r"" + json.dumps(info)):
-                res = re.sub(r'\w+\[', '', ds)
-                res = re.sub(r'].index', '', res)
+            for ds in re.findall(r"ds\[\w+]\.index", r"" + json.dumps(info)):
+                res = re.sub(r"\w+\[", "", ds)
+                res = re.sub(r"].index", "", res)
                 list_ds.append(res)
         except Exception as e:
-            print("Error:")
-            print(e)
+            print_text("Error:", THEMES_MESSAGE.ERROR)
+            print_text(e, THEMES_MESSAGE.ERROR)
         return list_ds
 
     def display_menu(self):
@@ -60,7 +62,7 @@ class RRD:
                     break
         except Exception as e:
             print("Error: ")
-            print(e)
+            print_text(e, THEMES_MESSAGE.ERROR)
 
         self.display_menu()
 
@@ -144,7 +146,7 @@ class RRD:
             rrdtool.graph(rrd_args)
             print("Finish!")
         except Exception as e:
-            print(e)
+            print_text(e, THEMES_MESSAGE.ERROR)
 
     def all_graph(self):
         print(self.file)
@@ -169,7 +171,7 @@ class RRD:
         return res_xport
 
     def parse_timestamp(self, timestamp):
-        return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
     def csv_export(self):
         res_xport = self.xport()
@@ -179,12 +181,12 @@ class RRD:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        with open(path_csv, 'w') as the_file:
-            list_columns = res_xport['meta']['legend']
-            data = res_xport['data']
-            start = res_xport['meta']['start']
-            step = res_xport['meta']['step']
-            end = res_xport['meta']['end']
+        with open_file(path_csv, FORMATS_OPEN.WRITE) as the_file:
+            list_columns = res_xport["meta"]["legend"]
+            data = res_xport["data"]
+            start = res_xport["meta"]["start"]
+            step = res_xport["meta"]["step"]
+            end = res_xport["meta"]["end"]
 
             i = 0
             the_file.write("timestamp,")

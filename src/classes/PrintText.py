@@ -2,18 +2,18 @@ from termcolor import cprint
 from enum import Enum
 
 
-class Color:
+class THEME:
     def __init__(self, color):
         self.color = color
 
 
-class THEMES(Enum):
-    ERROR = Color('red')
-    WARNING = Color('yellow')
-    SUCCESS = Color('green')
-    INFO = Color('black')
+class THEMES_MESSAGE:
+    ERROR = THEME('red')
+    WARNING = THEME('yellow')
+    SUCCESS = THEME('green')
+    INFO = THEME('blue')
+    MAIN = THEME(None)
 
 
-def print_text(text, theme=THEMES.INFO):
-    print(theme)
-    print(cprint(text, theme.color))
+def print_text(text, theme=THEMES_MESSAGE.MAIN):
+    cprint(text, theme.color)

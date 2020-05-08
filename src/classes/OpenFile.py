@@ -1,29 +1,28 @@
 import os
 from enum import Enum
 
-from src.classes.PrintText import print_text, THEMES
-from src.modules.Settings import Settings
-from Main import settings
+from src.classes.PrintText import print_text, THEMES_MESSAGE
+from src.modules.Settings import settings
 
 
-class TYPE_OPEN(Enum):
+class FORMATS_OPEN:
     READ = 'r'
     WRITE = 'w'
     APPEND = 'a'
 
 
-def open_file(filename, directory=settings.root_resources, type_open=TYPE_OPEN.READ, attr=''):
+def open_file(filename, directory=settings.root_resources, type_open=FORMATS_OPEN.READ, attr=''):
     if not os.path.exists(directory):
         try:
             os.makedirs(directory)
         except Exception as e:
-            print_text("Error: ", THEMES.ERROR)
-            print_text(e, THEMES.ERROR)
+            print_text("Error: ", THEMES_MESSAGE.ERROR)
+            print_text(e, THEMES_MESSAGE.ERROR)
 
     path = directory + filename
 
     if not os.path.isfile(path):
         with open(path, "w", newline=""):
-            print_text('File ' + filename + ' created!', THEMES.SUCCESS)
+            print_text('File ' + filename + ' created!', THEMES_MESSAGE.WARNING)
 
-    return open(path, type_open + attr, newline="")
+    return open(path, str(type_open) + attr, newline="")

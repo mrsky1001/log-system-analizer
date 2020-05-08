@@ -11,7 +11,7 @@
     "path_to_params_rrd": "params_rrd/",
     "path_to_graphs": "graphs/",
     "path_to_localization": "localization.json",
-    "lang": "eng",
+    "lang": "rus",
     "start_point": "1419000000",
     "end_point": "now",
     "type_command": "AVERAGE",
