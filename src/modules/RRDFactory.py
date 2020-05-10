@@ -8,7 +8,7 @@ import re
 import warnings
 
 from src.classes.PrintText import print_text, THEMES_MESSAGE
-from src.classes.OpenFile import open_file, FORMATS_OPEN
+from src.classes.OpenFile import open_file, FORMATS_OPEN, check_exist_file
 from src.modules.Settings import settings
 
 warnings.filterwarnings("ignore")
@@ -104,27 +104,33 @@ class RRDFactory:
         try:
             for item in types_input:
                 if item.id == ans:
-                    self.display_list_rrd_files()
+                    # self.display_list_rrd_files()
                     item.function()
                     break
         except Exception as e:
             print_text(settings.local.error, THEMES_MESSAGE.ERROR)
             print_text(e, THEMES_MESSAGE.ERROR)
 
+    def search_rrd(self, file_name):
+        for rrd in self.list_rrd:
+            if rrd.file_name == file_name or re.sub(".rrd", "", rrd.file_name) == file_name:
+                return rrd
+
     def search_rrd_on_param(self):
         print_text(settings.local.menu_of_search_rrd_on_param, THEMES_MESSAGE.INFO)
         param = input(settings.local.input_name_rrd)
 
+        is_found = False
         for rrd in self.list_rrd:
             if rrd.name_host == param:
+                is_found = True
                 self.selected_rrd = rrd
-                print_text(settings.local.search_successful, THEMES_MESSAGE.SUCCESS)
                 break
 
-        if type(self.selected_rrd) is not RRD:
+        if not is_found or type(self.selected_rrd) is not RRD:
             print_text(settings.local.not_found, THEMES_MESSAGE.WARNING)
         else:
-            self.selected_rrd.display_params()
+            print_text(settings.local.search_successful, THEMES_MESSAGE.SUCCESS)
 
         return self.selected_rrd
 
@@ -137,12 +143,11 @@ class RRDFactory:
         if type(self.selected_rrd) is not RRD:
             print_text(settings.local.not_found, THEMES_MESSAGE.WARNING)
         else:
-            self.selected_rrd.display_params()
+            print_text(settings.local.search_successful, THEMES_MESSAGE.SUCCESS)
 
         return self.selected_rrd
 
     def display_list_rrd_files(self):
-
         list_headers = [settings.local.name, settings.local.description, settings.local.file]
         list_rows = []
 
@@ -171,6 +176,7 @@ class RRDFactory:
             print_text(rrd.csv_export())
 
     def csv_concat(self, rrd1, rrd2):
+        print_text(settings.local.merging_params)
 
         f1 = rrd1.csv_export()
         f2 = rrd2.csv_export()
@@ -198,23 +204,17 @@ class RRDFactory:
                     if key not in keys1:
                         df1.at[i, key] = df2.at[idx, key]
 
-        directory = "csv_merge/"
+        directory = settings.path_to_merges_params
+        filename = "merge_" + rrd1.name_host + "_" + rrd2.name_host + ".csv"
+        check_exist_file(filename, directory)
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        df1.to_csv(directory + "merge_" + rrd1.name_host + "_" + rrd2.name_host + ".csv", index=False, encoding="utf-8",
+        path = directory + filename
+        df1.to_csv(path, index=False, encoding="utf-8",
                    quotechar="", quoting=csv.QUOTE_NONE)
         return df1
 
-    def search_rrd(self, file_name):
-        for rrd in self.list_rrd:
-            if rrd.file_name == file_name or re.sub(".rrd", "", rrd.file_name) == file_name:
-                print_text(settings.local.search_successful, THEMES_MESSAGE.SUCCESS)
-                return rrd
-
     def correlation_rrd_files(self):
-        self.display_list_rrd_files()
+        # self.display_list_rrd_files()
 
         rrd1 = self.search_rrd(input(settings.local.input_filename_rrd_number + "1: "))
         rrd2 = self.search_rrd(input(settings.local.input_filename_rrd_number + "2: "))
@@ -224,43 +224,55 @@ class RRDFactory:
             return
 
         data = self.csv_concat(rrd1, rrd2)
-        print_text(data.to_string)
+        print_text(settings.local.table_params, THEMES_MESSAGE.INFO)
+        print_text(data.to_string(max_rows=10))
+
         print_text(settings.local.start_correlation)
         corrmat = data.corr()
 
-        directory = "correlation_table/"
-
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
         try:
-            path_save = directory + "correlation_" + rrd1.name_host + "_" + rrd2.name_host
-            corrmat.to_excel(path_save + ".xlsx")
+            directory = settings.path_to_correlation_xls
+            filename = "correlation_" + rrd1.name_host + "_" + rrd2.name_host + ".xlsx"
+            check_exist_file(filename, directory)
+            path_save = directory + filename
+
+            corrmat.to_excel(path_save)
         except Exception as e:
             print_text(e, THEMES_MESSAGE.ERROR)
+
         # with open(path_save + ".txt", "w") as the_file:
         #     the_file.write(corrmat.to)
 
-        print_text(corrmat)
+        print_text(settings.local.table_correlation, THEMES_MESSAGE.INFO)
+        print_text(str(corrmat))
 
         f, ax = plt.subplots(figsize=(12, 8))
         sns.heatmap(corrmat, cmap="YlGnBu", square=True, annot=True, ax=ax)
 
-        directory = "graphs/"
+        directory = settings.path_to_correlation_images
+        filename = "correlation_matrix_type_1_" + rrd1.name_host + "_" + rrd2.name_host + ".png"
+        check_exist_file(filename, directory)
+        path_save = directory + filename
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        plt.savefig(directory + "correlation_matrix_" + rrd1.name_host + "_" + rrd2.name_host + ".png")
+        plt.savefig(path_save)
         plt.show()
         plt.clf()
         plt.close()
+        print_text(settings.local.graph_correlation_created + path_save, THEMES_MESSAGE.SUCCESS)
+
+        directory = settings.path_to_correlation_images
+        filename = "correlation_matrix_type_2_" + rrd1.name_host + "_" + rrd2.name_host + ".png"
+        check_exist_file(filename, directory)
+        path_save = directory + filename
 
         plt.subplots(figsize=(12, 8))
         sns.pairplot(data)
-        plt.savefig(directory + "correlation_hists_" + rrd1.name_host + "_" + rrd2.name_host + ".png")
-
+        plt.savefig(path_save)
         plt.show()
+        plt.clf()
+        plt.close()
+        print_text(settings.local.graph_correlation_created + path_save, THEMES_MESSAGE.SUCCESS)
+
         print_text(settings.local.complete_correlation, THEMES_MESSAGE.SUCCESS)
 
 

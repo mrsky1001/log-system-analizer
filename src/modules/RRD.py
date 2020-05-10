@@ -5,16 +5,18 @@ import re
 from datetime import datetime
 from pandas.io import json
 
-from src.classes.OpenFile import open_file, FORMATS_OPEN
+from src.classes.OpenFile import open_file, FORMATS_OPEN, check_exist_file
 from src.classes.PrintText import print_text, THEMES_MESSAGE
 from src.modules import RRDFactory
+from src.modules.MenuFactory import MenuFactory, init_menu_selected_rrd
 from src.modules.Settings import settings
 
 list_functions = ["info", "fetch", "graph", "xport", "dump", "change_params", "exit"]
 
 
 class RRD:
-    def __init__(self, name_host, description, path_to_database, file_name, start_point, end_point, type_command, height, width):
+    def __init__(self, name_host, description, path_to_database, file_name, start_point, end_point, type_command,
+                 height, width):
         self.name_host = name_host
         self.description = description
         self.path_to_database = path_to_database
@@ -31,7 +33,6 @@ class RRD:
         self.list_ds = self.parse_ds
         self.list_menu = []
 
-
     @property
     def parse_ds(self):
         list_ds = []
@@ -47,54 +48,27 @@ class RRD:
             print_text(e, THEMES_MESSAGE.ERROR)
         return list_ds
 
-    def display_menu(self):
-        print_text(settings.local.menu_rrd)
-
-        for item in self.list_menu:
-            print_text(str(item.id) + str(". " + item.name))
-
-        ans = input(settings.local.input)
-
-        if ans == str(len(self.list_menu)):
-            return
-
-        try:
-            for item in self.list_menu:
-                if item.id == ans:
-                    item.function()
-                    break
-        except Exception as e:
-            print_text("Error: ")
-            print_text(e, THEMES_MESSAGE.ERROR)
-
-        self.display_menu()
-
-    # def set_menu(self):
-    #     self.list_menu.append(RRDFactory.MenuItem("Display params", self.display_params))
-    #     self.list_menu.append(RRDFactory.MenuItem("Show graph", self.all_on_one_graph))
-    #     self.list_menu.append(RRDFactory.MenuItem("Show all graph", self.all_graph))
-    #     self.list_menu.append(RRDFactory.MenuItem("Parse to csv rrd-file", self.csv_export))
-    #     self.list_menu.append(RRDFactory.MenuItem("Exit", ""))
-    #
-    #     RRDFactory.set_id(self.list_menu)
+    def display_menu(self, rrd_factory):
+        menu_rrd = MenuFactory(settings.local.menu_rrd, settings,
+                               lambda: init_menu_selected_rrd(settings, self, rrd_factory))
+        menu_rrd.display_menu_repeat([self.name_host, self.file_name])
 
     def display_params(self):
         print_text(settings.local.params_rrd, THEMES_MESSAGE.INFO)
 
         for key, value in self.__dict__.items():
-            print_text(key, " =", value)
+            print_text([key, " =", value])
 
     def display_info(self):
         print_text(settings.local.info_rrd, THEMES_MESSAGE.INFO)
         print_text(self.file)
         print_text(rrdtool.info(self.file))
 
-    def graph(self, column):
-        directory = "graphs/" + column
+    def generate_graph(self, column, directory):
+        filename = column + ".png"
+        path_to_save = check_exist_file(filename, directory)
 
-        path_to_save = directory + ".png"
-
-        print_text("\nStart generate " + path_to_save + "...")
+        print_text(settings.local.start_generate + path_to_save + "...")
 
         try:
             rrdtool.graph(path_to_save,
@@ -113,16 +87,15 @@ class RRD:
             print_text(e, THEMES_MESSAGE.ERROR)
         print_text(settings.local.complete_graph, THEMES_MESSAGE.SUCCESS)
 
-    def all_on_one_graph(self):
-        path_to_save = "graphs/" + self.path_to_database
-
-        if not os.path.exists(path_to_save):
-            os.makedirs(path_to_save)
+    def generate_graph_with_all_params(self):
+        directory = settings.path_to_graphs + self.name_host + '/'
+        filename = ''
 
         for column in self.list_ds:
-            path_to_save += "_" + column
+            filename = "_" + column
 
-        path_to_save += ".png"
+        filename += ".png"
+        path_to_save = check_exist_file(filename, directory)
 
         print_text(settings.local.start_generate + path_to_save + "...")
 
@@ -152,10 +125,11 @@ class RRD:
         except Exception as e:
             print_text(e, THEMES_MESSAGE.ERROR)
 
-    def all_graph(self):
-        print_text(self.file)
+    def generate_graphs_on_all_params(self):
+        directory = settings.path_to_graphs + self.name_host + '/'
+
         for column in self.list_ds:
-            self.graph(column)
+            self.generate_graph(column, directory)
 
         print_text(settings.local.complete_graphs, THEMES_MESSAGE.SUCCESS)
 
@@ -178,14 +152,12 @@ class RRD:
         return datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
     def csv_export(self):
+        directory = settings.path_to_csv + self.name_host + '/'
+        filename = self.file_name + ".csv"
+        path_csv = directory + filename
         res_xport = self.xport()
-        directory = "csv_rrd/"
-        path_csv = directory + self.name_host + "." + self.file_name + ".csv"
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        with open_file(path_csv, FORMATS_OPEN.WRITE) as the_file:
+        with open_file(filename, directory, FORMATS_OPEN.WRITE) as the_file:
             list_columns = res_xport["meta"]["legend"]
             data = res_xport["data"]
             start = res_xport["meta"]["start"]
@@ -220,5 +192,8 @@ class RRD:
                         line += ","
                     the_file.write(line)
                 the_file.write("\n")
+
+        print_text(path_csv)
+        print_text(settings.local.export_csv, THEMES_MESSAGE.SUCCESS)
 
         return path_csv

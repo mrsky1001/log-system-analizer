@@ -16,4 +16,8 @@ class THEMES_MESSAGE:
 
 
 def print_text(text, theme=THEMES_MESSAGE.MAIN):
-    cprint(text, theme.color)
+    if isinstance(text, list):
+        res = ' '.join((str(x) for x in text))
+    else:
+        res = text
+    cprint(res, theme.color)

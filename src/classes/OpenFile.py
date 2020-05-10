@@ -11,7 +11,7 @@ class FORMATS_OPEN:
     APPEND = 'a'
 
 
-def open_file(filename, directory=settings.root_resources, type_open=FORMATS_OPEN.READ, attr=''):
+def check_exist_file(filename, directory=settings.root_resources):
     if not os.path.exists(directory):
         try:
             os.makedirs(directory)
@@ -25,4 +25,8 @@ def open_file(filename, directory=settings.root_resources, type_open=FORMATS_OPE
         with open(path, "w", newline=""):
             print_text('File ' + filename + ' created!', THEMES_MESSAGE.WARNING)
 
-    return open(path, str(type_open) + attr, newline="")
+    return path
+
+
+def open_file(filename, directory=settings.root_resources, type_open=FORMATS_OPEN.READ, attr=''):
+    return open(check_exist_file(filename, directory), str(type_open) + attr, newline="")
